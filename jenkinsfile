@@ -17,36 +17,23 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    cd Automation
-                    ansible-playbook -i inventory.ini deploy_html.yml \
+                    ansible-playbook -i Automation/inventory.ini Automation/deploy_html.yml \
                         --extra-vars "target_environment=blue jenkins_job_name=${JOB_NAME}"
                     '''
                 }
             }
         }
 
-        stage('Redirect Traffic to Blue') {
-            steps {
-                script {
-                    sh '''
-                    curl "http://10.0.10.99:5000/update-scale?env=blue&server_id=1&scale_value=100"
-                    curl "http://10.0.10.99:5000/update-scale?env=blue&server_id=2&scale_value=100"
-                    '''
-                }
-            }
-        }
-
-        stage('Run Tests on Blue') {
+        stage('Run Tests on Test Environment') {
             steps {
                 sh '''
-                # Replace with actual test commands
-                curl -I http://10.0.10.113/your-html-file.html
-                curl -I http://10.0.10.112/your-html-file.html
+                curl -I http://10.0.10.113/index.html
+                curl -I http://10.0.10.112/index.html
                 '''
             }
         }
 
-        stage('Approval for Production (Green)') {
+        stage('Approval for Production') {
             steps {
                 input message: 'Deploy to production (Green)?', ok: 'Yes'
             }
@@ -56,21 +43,19 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    ansible-playbook -i inventory.ini deploy_html.yml \
+                    ansible-playbook -i Automation/inventory.ini Automation/deploy_html.yml \
                         --extra-vars "target_environment=green jenkins_job_name=${JOB_NAME}"
                     '''
                 }
             }
         }
 
-        stage('Redirect Traffic to Green') {
+        stage('Run Tests on Production Environment') {
             steps {
-                script {
-                    sh '''
-                    curl "http://<flask-server-ip>:5000/update-scale?env=green&server_id=1&scale_value=100"
-                    curl "http://<flask-server-ip>:5000/update-scale?env=green&server_id=2&scale_value=100"
-                    '''
-                }
+                sh '''
+                curl -I http://10.0.10.132/index.html
+                curl -I http://10.0.10.131/index.html
+                '''
             }
         }
     }
