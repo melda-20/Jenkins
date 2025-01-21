@@ -17,8 +17,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    cd Automation
-                    ansible-playbook -i inventory.ini deploy_html.yml \
+                    ansible-playbook -i /var/lib/jenkins/Automation/inventory.ini /var/lib/jenkins/Automation/deploy_html.yml \
                         --extra-vars "target_environment=blue html_src=${WORKSPACE}/index.html"
                     '''
                 }
@@ -44,8 +43,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    cd Automation
-                    ansible-playbook -i inventory.ini deploy_html.yml \
+                    ansible-playbook -i /var/lib/jenkins/Automation/inventory.ini /var/lib/jenkins/Automation/deploy_html.yml \
                         --extra-vars "target_environment=green html_src=${WORKSPACE}/index.html"
                     '''
                 }
