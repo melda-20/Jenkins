@@ -17,6 +17,7 @@ pipeline {
             steps {
                 script {
                     sh '''
+                    cd Automation
                     ansible-playbook -i inventory.ini deploy_html.yml \
                         --extra-vars "target_environment=blue jenkins_job_name=${JOB_NAME}"
                     '''
