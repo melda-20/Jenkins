@@ -25,20 +25,27 @@ pipeline {
 
         stage('Run Tests on Test Environment') {
             steps {
-                sh '''
-                curl -I http://10.0.10.113/index.html
-                curl -I http://10.0.10.112/index.html
-                '''
+                script {
+                    sh '''
+                    curl -I http://10.0.10.113/index.html
+                    curl -I http://10.0.10.112/index.html
+                    '''
+                }
             }
         }
 
-        stage('Approval for Production') {
+        stage('Approval for Production Deployment') {
             steps {
-                input message: 'Deploy to production (Green)?', ok: 'Yes'
+                input message: 'Deploy to production (Green)?', parameters: [
+                    booleanParam(defaultValue: false, description: 'Approve deployment to Green?', name: 'ok')
+                ]
             }
         }
 
         stage('Deploy to Production (Green)') {
+            when {
+                expression { return params.ok }  // Check if `ok` is set to true
+            }
             steps {
                 script {
                     sh '''
@@ -50,6 +57,9 @@ pipeline {
         }
 
         stage('Run Tests on Production Environment') {
+            when {
+                expression { return params.ok }  // Run only if deployment to green is approved
+            }
             steps {
                 sh '''
                 curl -I http://10.0.10.132/index.html
