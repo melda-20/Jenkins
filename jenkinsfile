@@ -1,0 +1,88 @@
+pipeline {
+    agent any
+
+    environment {
+        ANSIBLE_HOST_KEY_CHECKING = 'False'
+        TARGET_ENV = 'blue'  // Default to test environment
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/melda-20/Jenkins.git'
+            }
+        }
+
+        stage('Deploy to Test (Blue)') {
+            steps {
+                script {
+                    sh '''
+                    ansible-playbook -i inventory.ini deploy_html.yml \
+                        --extra-vars "target_environment=blue jenkins_job_name=${JOB_NAME}"
+                    '''
+                }
+            }
+        }
+
+        stage('Redirect Traffic to Blue') {
+            steps {
+                script {
+                    sh '''
+                    curl "http://10.0.10.99:5000/update-scale?env=blue&server_id=1&scale_value=100"
+                    curl "http://10.0.10.99:5000/update-scale?env=blue&server_id=2&scale_value=100"
+                    '''
+                }
+            }
+        }
+
+        stage('Run Tests on Blue') {
+            steps {
+                sh '''
+                # Replace with actual test commands
+                curl -I http://10.0.10.113/your-html-file.html
+                curl -I http://10.0.10.112/your-html-file.html
+                '''
+            }
+        }
+
+        stage('Approval for Production (Green)') {
+            steps {
+                input message: 'Deploy to production (Green)?', ok: 'Yes'
+            }
+        }
+
+        stage('Deploy to Production (Green)') {
+            steps {
+                script {
+                    sh '''
+                    ansible-playbook -i inventory.ini deploy_html.yml \
+                        --extra-vars "target_environment=green jenkins_job_name=${JOB_NAME}"
+                    '''
+                }
+            }
+        }
+
+        stage('Redirect Traffic to Green') {
+            steps {
+                script {
+                    sh '''
+                    curl "http://<flask-server-ip>:5000/update-scale?env=green&server_id=1&scale_value=100"
+                    curl "http://<flask-server-ip>:5000/update-scale?env=green&server_id=2&scale_value=100"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline execution completed.'
+        }
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Deployment failed.'
+        }
+    }
+}
