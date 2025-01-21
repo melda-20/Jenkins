@@ -25,12 +25,9 @@ pipeline {
 
         stage('Run Tests on Test Environment') {
             steps {
-                script {
-                    sh '''
-                    curl -I http://10.0.10.113/index.html
-                    curl -I http://10.0.10.112/index.html
-                    '''
-                }
+                sh '''
+                curl -I http://10.0.10.99:8080/index.html
+                '''
             }
         }
 
@@ -44,7 +41,7 @@ pipeline {
 
         stage('Deploy to Production (Green)') {
             when {
-                expression { return params.ok }  // Check if `ok` is set to true
+                expression { return params.ok }
             }
             steps {
                 script {
@@ -58,12 +55,11 @@ pipeline {
 
         stage('Run Tests on Production Environment') {
             when {
-                expression { return params.ok }  // Run only if deployment to green is approved
+                expression { return params.ok }
             }
             steps {
                 sh '''
-                curl -I http://10.0.10.132/index.html
-                curl -I http://10.0.10.131/index.html
+                curl -I http://10.0.10.99:8081/index.html
                 '''
             }
         }
