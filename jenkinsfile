@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         ANSIBLE_HOST_KEY_CHECKING = 'False'
-        TARGET_ENV = 'blue'  // Default to test environment
     }
 
     stages {
@@ -68,7 +67,7 @@ pipeline {
             echo 'Deployment successful!'
         }
         failure {
-            echo 'Deployment failed.'
+            echo 'Deployment failed!'
         }
     }
 }
