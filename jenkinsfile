@@ -17,8 +17,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    ansible-playbook -i Automation/inventory.ini Automation/deploy_html.yml \
-                        --extra-vars "target_environment=blue jenkins_job_name=${JOB_NAME}"
+                    cd Automation
+                    ansible-playbook -i inventory.ini deploy_html.yml \
+                        --extra-vars "target_environment=blue html_src=${WORKSPACE}/index.html"
                     '''
                 }
             }
@@ -43,8 +44,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    ansible-playbook -i Automation/inventory.ini Automation/deploy_html.yml \
-                        --extra-vars "target_environment=green jenkins_job_name=${JOB_NAME}"
+                    cd Automation
+                    ansible-playbook -i inventory.ini deploy_html.yml \
+                        --extra-vars "target_environment=green html_src=${WORKSPACE}/index.html"
                     '''
                 }
             }
