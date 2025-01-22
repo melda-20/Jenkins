@@ -26,22 +26,24 @@ pipeline {
         stage('Run Tests on Test Environment') {
             steps {
                 sh '''
-                curl -I http://10.0.10.99:8080/index.html
+                curl -I http://<haproxy_ip>:8080/index.html
                 '''
             }
         }
 
         stage('Approval for Production Deployment') {
             steps {
-                input message: 'Deploy to production (Green)?', parameters: [
-                    booleanParam(defaultValue: false, description: 'Approve deployment to Green?', name: 'ok')
-                ]
+                script {
+                    env.DEPLOY_TO_GREEN = input message: 'Deploy to production (Green)?', parameters: [
+                        booleanParam(defaultValue: false, description: 'Approve deployment to Green?', name: 'approve')
+                    ]
+                }
             }
         }
 
         stage('Deploy to Production (Green)') {
             when {
-                expression { return params.ok }  // This checks if `ok` is true
+                expression { return env.DEPLOY_TO_GREEN.toBoolean() }  // Explicitly check the environment variable
             }
             steps {
                 script {
@@ -55,11 +57,11 @@ pipeline {
 
         stage('Run Tests on Production Environment') {
             when {
-                expression { return params.ok }
+                expression { return env.DEPLOY_TO_GREEN.toBoolean() }
             }
             steps {
                 sh '''
-                curl -I http://10.0.10.99:8081/index.html
+                curl -I http://<haproxy_ip>:8081/index.html
                 '''
             }
         }
