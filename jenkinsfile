@@ -41,7 +41,7 @@ pipeline {
 
         stage('Deploy to Production (Green)') {
             when {
-                expression { return params.ok }
+                expression { return params.ok }  // This checks if `ok` is true
             }
             steps {
                 script {
